@@ -1,0 +1,15 @@
+// FS-ISAC OCCIP Indicator Notice 25183.1 - IP Addresses Associated with Superjumper Obfuscation Network
+// Microsoft Sentinel KQL Query
+let QueryPeriod = 30d;
+let SuperJumpIPs=externaldata(Type:string, Value:string, Source:string)
+['https://raw.githubusercontent.com/0bsolescence/KQL/refs/heads/refs/SuperJumperIPs.csv']
+| where Type == "SuperJumpIPs"
+| project "SuperJumpIPs";
+let SuperJumpCSL = CommonSecurityLog
+| where TimeGenerated > ago(QueryPeriod)
+| where SourceIP has_any(SuperJumpIPs)
+| where DestinationIP has_any(SuperJumpIPs);
+let SuperJumpWAF = ImpervaWAFCloud_CL
+| where TimeGenerated > ago(QueryPeriod)
+| where xff_s has_any(SuperJumpIPs);
+union SuperJumpCSL, SuperJumpWAF
